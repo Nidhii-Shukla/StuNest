@@ -1,223 +1,222 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Shield, MapPin, Users, Star, ArrowRight, CheckCircle, Home, Map, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useLayoutEffect, useRef, useState, useEffect } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ArrowRight, Search, Shield, MapPin, Zap } from 'lucide-react';
 import HostelCard from '../components/HostelCard';
 import styles from './LandingPage.module.css';
+import { hostelsApi } from '../lib/api';
 
-const FEATURED_HOSTELS = [
+gsap.registerPlugin(ScrollTrigger);
+
+// --- Fallback Dummy Data ---
+const DUMMY_FEATURED = [
   { id: '1', name: 'Sunrise Premium Boys Hostel', address: 'Near JNTUH, Kukatpally', price: 8500, category: 'boys', type: 'hostel', rating: 4.8, reviews: 124, isPremium: true, distance: 0.5, facilities: ['ac', 'wifi', 'food'], image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=800' },
   { id: '5', name: 'Royal Heritage Girls Hostel', address: 'Kompally, Near CMRIT', price: 15000, category: 'girls', type: 'hostel', rating: 4.7, reviews: 320, isPremium: true, distance: 0.2, facilities: ['ac', 'wifi', 'security'], image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=800' },
   { id: '3', name: 'Elite Unisex Co-living', address: 'Gachibowli, Near CBIT', price: 12000, category: 'both', type: 'hostel', rating: 4.9, reviews: 210, isPremium: true, distance: 2.0, facilities: ['ac', 'wifi', 'pool'], image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800' },
-  { id: '7', name: 'Green View Co-living', address: 'Dundigal, Near MLRIT', price: 10500, category: 'both', type: 'pg', rating: 4.5, reviews: 156, isPremium: true, distance: 0.3, facilities: ['ac', 'wifi', 'balcony'], image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800' },
-  { id: '2', name: 'Cozy Living PG for Girls', address: 'KPHB Colony, Near JNTUH', price: 6000, category: 'girls', type: 'pg', rating: 4.2, reviews: 89, isPremium: false, distance: 1.2, facilities: ['wifi', 'food', 'security'], image: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?q=80&w=800' },
-  { id: '4', name: 'Student Nest PG', address: 'Gandipet, Near CBIT', price: 5500, category: 'boys', type: 'pg', rating: 3.9, reviews: 45, isPremium: false, distance: 0.8, facilities: ['wifi', 'food'], image: 'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?q=80&w=800' },
 ];
 
-const WHY_ITEMS = [
-  { icon: <MapPin size={28} />, title: 'Nearby Campus Hostels', desc: 'Sorted by walking distance from your college gate.' },
-  { icon: <Shield size={28} />, title: 'Verified Properties', desc: 'Every listing is personally checked by our team.' },
-  { icon: <Users size={28} />, title: 'Boys, Girls & Co-living', desc: 'Options for all genders with safe environments.' },
-  { icon: <Star size={28} />, title: 'Budget & Premium Stays', desc: 'From ₹4,000 budget rooms to ₹15,000 premium suites.' },
-  { icon: <Map size={28} />, title: 'Google Maps Directions', desc: 'One-tap navigation from campus to your hostel.' },
-];
+export default function LandingPage() {
+  const containerRef = useRef(null);
+  const [featuredHostels, setFeaturedHostels] = useState([]);
 
-const HOW_STEPS = [
-  { step: '01', title: 'Explore Hostels', desc: 'Search by your college name to discover all nearby verified accommodations.' },
-  { step: '02', title: 'Compare & Filter', desc: 'Filter by distance, price, gender, and amenities to find your perfect match.' },
-  { step: '03', title: 'Contact Owner', desc: 'WhatsApp or call the owner directly — no brokerage, no hidden fees.' },
-  { step: '04', title: 'Move In Easily', desc: 'Schedule a visit, sign the agreement, and settle into your new home.' },
-];
+  useEffect(() => {
+    async function loadFeatured() {
+      try {
+        const data = await hostelsApi.getFeatured(3);
+        setFeaturedHostels(data.length > 0 ? data : DUMMY_FEATURED);
+      } catch (err) {
+        setFeaturedHostels(DUMMY_FEATURED);
+      }
+    }
+    loadFeatured();
+  }, []);
 
-function LandingPage() {
-  const navigate = useNavigate();
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      
+      // --- HERO TIMELINE ---
+      const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+      
+      // Initial states
+      gsap.set(".hero-badge", { opacity: 0, y: 20 });
+      gsap.set(".hero-title-line", { y: 100, opacity: 0 });
+      gsap.set(".hero-sub", { opacity: 0, y: 20 });
+      gsap.set(".hero-cta", { opacity: 0, scale: 0.9 });
+
+      // Animate Hero
+      tl.to(".hero-badge", { opacity: 1, y: 0, duration: 0.8, delay: 0.2 })
+        .to(".hero-title-line", { y: 0, opacity: 1, duration: 1, stagger: 0.15 }, "-=0.6")
+        .to(".hero-sub", { opacity: 1, y: 0, duration: 1 }, "-=0.7")
+        .to(".hero-cta", { opacity: 1, scale: 1, duration: 0.8, ease: "back.out(1.5)" }, "-=0.8");
+
+
+      // --- SCROLL REVEALS ---
+      // Features header
+      gsap.fromTo(".feat-header", 
+        { opacity: 0, y: 40 },
+        { 
+          opacity: 1, y: 0, duration: 1, 
+          scrollTrigger: { trigger: ".features-trigger", start: "top 80%" }
+        }
+      );
+
+      // Feature cards stagger
+      gsap.fromTo(".feat-card", 
+        { opacity: 0, y: 60, scale: 0.98 },
+        { 
+          opacity: 1, y: 0, scale: 1, duration: 0.8, stagger: 0.1, ease: "power3.out",
+          scrollTrigger: { trigger: ".features-trigger", start: "top 70%" }
+        }
+      );
+
+      // Hostels stagger
+      gsap.fromTo(".hostel-card", 
+        { opacity: 0, y: 50 },
+        { 
+          opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: "power2.out",
+          scrollTrigger: { trigger: ".hostels-trigger", start: "top 75%" }
+        }
+      );
+
+      // Bottom CTA scale and glow
+      gsap.fromTo(".cta-box", 
+        { opacity: 0, scale: 0.9, y: 50 },
+        { 
+          opacity: 1, scale: 1, y: 0, duration: 1, ease: "expo.out",
+          scrollTrigger: { trigger: ".cta-trigger", start: "top 85%" }
+        }
+      );
+
+    }, containerRef);
+    
+    return () => ctx.revert(); // Cleanup on unmount
+  }, []);
 
   return (
-    <div className={styles.landing}>
-
-      {/* ============ HERO ============ */}
+    <div className={styles.landing} ref={containerRef}>
+      {/* ============ HERO SECTION ============ */}
       <section className={styles.heroSection}>
-        <div className={styles.heroGlow1} />
-        <div className={styles.heroGlow2} />
-        <div className={styles.gridTexture} />
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className={styles.heroVideo}
+        >
+          <source src="/hero-video.mp4" type="video/mp4" />
+        </video>
+        <div className={styles.noiseOverlay} />
 
-        <div className={`container ${styles.heroContainer}`}>
-          {/* Left: Text + CTA only */}
-          <div className={styles.heroContent}>
-            <div className={styles.heroBadge}>✨ India's #1 Student Housing Platform</div>
-            <h1 className={styles.heroTitle}>
-              Find Your Perfect <br />
-              <span className={styles.gradientText}>Student Stay</span><br />
-              Near Campus
-            </h1>
-            <p className={styles.heroSubtitle}>
-              Discover verified hostels and PGs near your college with distance, facilities, safety, and student-friendly pricing.
-            </p>
-            <div className={styles.heroCtas}>
-              <Link to="/search" className={styles.primaryBtn}>
-                Explore Hostels <ArrowRight size={20} />
-              </Link>
-              <Link to="/owner" className={styles.outlineBtn}>
-                List Your Property
-              </Link>
+        <div className={styles.heroContent}>
+          <div className={`${styles.heroBadge} hero-badge`}>
+            <div className={styles.heroBadgeCircle} />
+            The New Standard in Student Housing
+          </div>
+
+          <h1 className={styles.heroTitle}>
+            <div style={{ overflow: "hidden", display: "inline-block" }}>
+              <span className="hero-title-line" style={{ display: "inline-block" }}>Find the perfect place</span>
+            </div><br />
+            <div style={{ overflow: "hidden", display: "inline-block" }}>
+              <span className="hero-title-line" style={{ display: "inline-block" }}>to call home.</span>
             </div>
-            <div className={styles.trustRow}>
-              <div className={styles.trustItem}><CheckCircle size={16} /> Verified Listings</div>
-              <div className={styles.trustItem}><CheckCircle size={16} /> No Brokerage</div>
-              <div className={styles.trustItem}><CheckCircle size={16} /> Free to Use</div>
-            </div>
-          </div>
+          </h1>
 
-          {/* Right: Photo collage */}
-          <div className={styles.heroVisuals}>
-            <div className={styles.photoComposition}>
-              {/* Main large image */}
-              <div className={styles.mainPhoto}>
-                <img
-                  src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=900"
-                  alt="Premium student room"
-                  className={styles.mainPhotoImg}
-                />
-                <div className={styles.mainPhotoOverlay}>
-                  <div className={styles.photoTag}>
-                    <Star size={14} fill="#F59E0B" color="#F59E0B" /> 4.9 · Premium Stay
-                  </div>
-                </div>
-              </div>
+          <p className={`${styles.heroSubtitle} hero-sub`}>
+            Discover verified hostels and PGs near your campus. Browse premium listings, compare prices, and navigate with ease.
+          </p>
 
-              {/* Floating card: top-right smaller image */}
-              <div className={styles.floatCardTR}>
-                <img
-                  src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=400"
-                  alt="Boys hostel"
-                  className={styles.floatImg}
-                />
-                <div className={styles.floatLabel}>
-                  <span className={styles.floatLabelName}>Boys Hostel</span>
-                  <span className={styles.floatLabelPrice}>₹8,500/mo</span>
-                </div>
-              </div>
-
-              {/* Floating card: bottom-left smaller image */}
-              <div className={styles.floatCardBL}>
-                <img
-                  src="https://images.unsplash.com/photo-1540518614846-7eded433c457?q=80&w=400"
-                  alt="Girls PG"
-                  className={styles.floatImg}
-                />
-                <div className={styles.floatLabel}>
-                  <span className={styles.floatLabelName}>Girls PG</span>
-                  <span className={styles.floatLabelPrice}>₹6,000/mo</span>
-                </div>
-              </div>
-
-              {/* Distance badge */}
-              <div className={styles.distanceBadge}>
-                <MapPin size={16} color="#FF5A6E" />
-                <div>
-                  <p className={styles.distanceBadgeTitle}>0.3 km from campus</p>
-                  <p className={styles.distanceBadgeSub}>5 min walk</p>
-                </div>
-              </div>
-
-              {/* Rating badge */}
-              <div className={styles.ratingBadge}>
-                <span className={styles.ratingBadgeScore}>4.9</span>
-                <div>
-                  <p className={styles.ratingBadgeTitle}>Student Rating</p>
-                  <p className={styles.ratingBadgeSub}>320+ reviews</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============ STATS ============ */}
-      <section className={styles.statsSection}>
-        <div className="container">
-          <div className={styles.statsGrid}>
-            <div className={styles.statCard}><h3>500+</h3><p>Verified Hostels</p></div>
-            <div className={styles.statCard}><h3>50+</h3><p>Colleges Covered</p></div>
-            <div className={styles.statCard}><h3>10K+</h3><p>Students Helped</p></div>
-            <div className={styles.statCard}><h3>24/7</h3><p>Student Support</p></div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============ WHY STUNEST ============ */}
-      <section className={styles.whySection}>
-        <div className="container">
-          <div className={styles.sectionHeader}>
-            <h2>Why StuNest?</h2>
-            <p>Everything students need to find their perfect home near college</p>
-          </div>
-          <div className={styles.whyGrid}>
-            {WHY_ITEMS.map((item, i) => (
-              <div key={i} className={styles.whyCard}>
-                <div className={styles.whyIcon}>{item.icon}</div>
-                <h3>{item.title}</h3>
-                <p>{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============ FEATURED STAYS ============ */}
-      <section className={styles.featuredSection}>
-        <div className="container">
-          <div className={styles.sectionHeaderFlex}>
-            <div>
-              <h2>Featured Student Stays</h2>
-              <p>Handpicked premium accommodations loved by students</p>
-            </div>
-            <Link to="/search" className={styles.viewAllLink}>
-              View All <ArrowRight size={18} />
+          <div className={`${styles.heroCtas} hero-cta`}>
+            <Link to="/search" className={styles.primaryBtn}>
+              Explore Hostels <ArrowRight size={20} />
             </Link>
           </div>
-          <div className={styles.featuredGrid}>
-            {FEATURED_HOSTELS.map(hostel => (
-              <HostelCard key={hostel.id} hostel={hostel} />
-            ))}
+        </div>
+      </section>
+
+      {/* ============ FEATURES SECTION ============ */}
+      <section className={`${styles.featuresSection} features-trigger`}>
+        <div className={styles.sectionContainer}>
+          <div className="feat-header">
+            <div className={styles.sectionBadge}>Why StuNest</div>
+            <h2 className={styles.sectionTitle}>Everything you need to secure your stay, without the hassle.</h2>
+          </div>
+
+          <div className={styles.featuresGrid}>
+            <div className={`${styles.featureCard} feat-card`}>
+              <div className={styles.featureContent}>
+                <div className={styles.featureIcon}><MapPin size={28} /></div>
+                <h3>Campus Proximity</h3>
+                <p>We map exactly how far every property is from your college gates, complete with walking distance estimates and safe routes.</p>
+              </div>
+            </div>
+
+            <div className={`${styles.featureCard} feat-card`}>
+              <div className={styles.featureContent}>
+                <div className={styles.featureIcon}><Shield size={28} /></div>
+                <h3>Verified Security</h3>
+                <p>Every listing undergoes rigorous physical verification. We check CCTV coverage, warden availability, and biometric access.</p>
+              </div>
+            </div>
+
+            <div className={`${styles.featureCard} feat-card`}>
+              <div className={styles.featureContent}>
+                <div className={styles.featureIcon}><Search size={28} /></div>
+                <h3>Smart Filtering</h3>
+                <p>Looking for a single room with AC and vegetarian food? Our deep filters help you find exactly what you want instantly.</p>
+              </div>
+            </div>
+
+            <div className={`${styles.featureCard} feat-card`}>
+              <div className={styles.featureContent}>
+                <div className={styles.featureIcon}><Zap size={28} /></div>
+                <h3>Zero Brokerage</h3>
+                <p>Connect directly with property owners. No middlemen, no hidden fees, just transparent pricing for your entire stay.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ============ HOW IT WORKS ============ */}
-      <section className={styles.howSection}>
-        <div className="container">
-          <div className={styles.sectionHeader}>
-            <h2>How It Works</h2>
-            <p>Find your new home in four simple steps</p>
+      {/* ============ HOSTEL PREVIEW SECTION ============ */}
+      <section className={`${styles.hostelsSection} hostels-trigger`}>
+        <div className={styles.sectionContainer}>
+          <div className="feat-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem' }}>
+            <div>
+              <div className={styles.sectionBadge}>Premium Stays</div>
+              <h2 style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.5rem)', fontWeight: 700, letterSpacing: '-0.02em', marginTop: '0.75rem', color: '#111' }}>Featured Hostels</h2>
+            </div>
+            <Link to="/search" style={{ color: '#111', fontWeight: 600, textDecoration: 'none', borderBottom: '2px solid var(--color-primary)', paddingBottom: '4px', whiteSpace: 'nowrap' }}>
+              View All
+            </Link>
           </div>
-          <div className={styles.stepsGrid}>
-            {HOW_STEPS.map((s, i) => (
-              <div key={i} className={styles.stepCard}>
-                <div className={styles.stepNumber}>{s.step}</div>
-                <h3>{s.title}</h3>
-                <p>{s.desc}</p>
+
+          <div className={styles.hostelsGrid}>
+            {featuredHostels.map((hostel) => (
+              <div key={hostel.id} className="hostel-card">
+                <HostelCard hostel={hostel} />
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ============ BOTTOM CTA ============ */}
-      <section className={styles.ctaSection}>
-        <div className="container">
-          <div className={styles.ctaBox}>
-            <div className={styles.ctaGlow1} />
-            <div className={styles.ctaGlow2} />
-            <div className={styles.ctaContent}>
-              <h2>Have a hostel or PG?</h2>
-              <p>List your property and reach students looking for accommodation near colleges every day.</p>
-              <Link to="/owner" className={styles.ctaBtn}>List Your Property</Link>
-            </div>
+      {/* ============ CTA SECTION ============ */}
+      <section className={`${styles.ctaSection} cta-trigger`}>
+        <div className={styles.heroGlow} style={{ top: '0', background: 'radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 60%)' }} />
+        <div className={`${styles.ctaBox} cta-box`}>
+          <h2>Ready to list your property?</h2>
+          <p>
+            Join hundreds of owners who trust StuNest to fill their vacancies with verified students.
+          </p>
+          <div>
+            <Link to="/owner" className={styles.primaryBtn}>
+              Get Started as Owner <ArrowRight size={20} />
+            </Link>
           </div>
         </div>
       </section>
-
     </div>
   );
 }
-
-export default LandingPage;

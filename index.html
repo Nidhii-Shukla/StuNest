@@ -5,12 +5,77 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>StuNest - Premium Hostel Booking</title>
+    <style>
+      /* Safely hide Google's injected top banner bar */
+      .goog-te-banner-frame,
+      .skiptranslate.goog-te-banner-frame,
+      .VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+      .VIpgJd-ZVi9od-ORHb-OEVmcd {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0px !important;
+        opacity: 0 !important;
+      }
+
+      /* Prevent Google from pushing body down */
+      body { top: 0px !important; position: static !important; }
+
+      /* Move the widget div off-screen WITHOUT breaking it */
+      #google_translate_element {
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+      }
+
+      /* Hide text-hover tooltip */
+      #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
+
+      /* Remove yellow highlight on translated text */
+      .goog-text-highlight {
+        background-color: transparent !important;
+        box-shadow: none !important;
+      }
+    </style>
+    <script>
+      // Prevent Google Translate from shifting body top
+      document.addEventListener("DOMContentLoaded", function () {
+        new MutationObserver(function () {
+          if (document.body.style.top && document.body.style.top !== "0px") {
+            document.body.style.setProperty("top", "0px", "important");
+          }
+        }).observe(document.body, { attributes: true, attributeFilter: ["style"] });
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
+
+    <!--
+      CRITICAL: This div must stay in the DOM and must NOT be display:none.
+      Google Translate renders a <select class="goog-te-combo"> inside it.
+      Our Navbar queries that select to trigger translation programmatically.
+      It is hidden by moving it off-screen via CSS (left:-9999px), not display:none.
+    -->
+    <div id="google_translate_element"></div>
+
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+          {
+            pageLanguage: "en",
+            includedLanguages: "hi,te,ta,mr,bn,gu,en",
+            autoDisplay: false
+          },
+          "google_translate_element"
+        );
+      }
+    </script>
+    <script type="text/javascript"
+      src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit">
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

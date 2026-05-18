@@ -8,22 +8,55 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  async function fetchProfile(userId) {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+  async function fetchProfile(userId, userEmail, userMeta) {
+    let { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    
+    const oauthRole = localStorage.getItem('oauth_selected_role');
+    
+    if (!data) {
+      const initialRole = oauthRole || 'student';
+      const { data: newData } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: userEmail,
+          role: initialRole,
+          full_name: userMeta?.full_name || userEmail?.split('@')[0] || 'User'
+        })
+        .select()
+        .single();
+      data = newData;
+      if (oauthRole) localStorage.removeItem('oauth_selected_role');
+    } else if (oauthRole && data.role !== oauthRole) {
+      const { data: updatedData } = await supabase
+        .from('profiles')
+        .update({ role: oauthRole })
+        .eq('id', userId)
+        .select()
+        .single();
+      if (updatedData) data = updatedData;
+      localStorage.removeItem('oauth_selected_role');
+    }
+    
     setProfile(data || null);
   }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) fetchProfile(session.user.id);
+      if (session?.user) {
+        fetchProfile(session.user.id, session.user.email, session.user.user_metadata);
+      }
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session?.user) fetchProfile(session.user.id);
-      else setProfile(null);
+      if (session?.user) {
+        fetchProfile(session.user.id, session.user.email, session.user.user_metadata);
+      } else {
+        setProfile(null);
+      }
     });
 
     return () => subscription.unsubscribe();

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, GraduationCap } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, GraduationCap, Home } from 'lucide-react';
+import supabase from '../lib/supabase';
+import StuNestLogo from '../components/StuNestLogo';
 import styles from './AuthPage.module.css';
 
 function LoginPage() {
@@ -23,10 +25,54 @@ function LoginPage() {
       return;
     }
     setLoading(true);
-    // Simulate auth — replace with Supabase call
-    await new Promise(r => setTimeout(r, 1200));
-    setLoading(false);
-    navigate(role === 'owner' ? '/owner' : '/search');
+    setError('');
+
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: form.email,
+        password: form.password,
+      });
+
+      if (authError) throw authError;
+
+      // Verify the role matches what they selected (optional but good practice)
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError) {
+        // If profile doesn't exist, allow them to log in but warn or default
+        console.error("Profile not found:", profileError);
+      }
+
+      setLoading(false);
+      
+      const userRole = profileData?.role || role;
+      navigate(userRole === 'owner' ? '/owner' : userRole === 'admin' ? '/admin' : '/search');
+    } catch (err) {
+      setError(err.message || 'Invalid email or password.');
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      localStorage.setItem('oauth_selected_role', role);
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/search`,
+        }
+      });
+      if (oauthError) throw oauthError;
+    } catch (err) {
+      setError(err.message || 'Failed to authenticate with Google.');
+      setLoading(false);
+    }
   };
 
   return (
@@ -40,7 +86,9 @@ function LoginPage() {
           className={styles.visualImg}
         />
         <div className={styles.visualContent}>
-          <Link to="/" className={styles.visualLogo}>StuNest<span>.</span></Link>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <StuNestLogo height={44} variant="light" />
+          </div>
           <h2 className={styles.visualHeading}>Find your perfect student home near campus</h2>
           <p className={styles.visualSubtext}>500+ verified hostels · Distance-based search · Student-friendly pricing</p>
           <div className={styles.visualStats}>
@@ -55,7 +103,9 @@ function LoginPage() {
       <div className={styles.formPanel}>
         <div className={styles.formWrapper}>
           {/* Mobile logo */}
-          <Link to="/" className={styles.mobileLogo}>StuNest<span>.</span></Link>
+          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }} className={styles.mobileLogo}>
+            <StuNestLogo height={44} />
+          </div>
 
           <h1 className={styles.formTitle}>Welcome back</h1>
           <p className={styles.formSubtitle}>Sign in to your account to continue</p>
@@ -74,12 +124,12 @@ function LoginPage() {
               className={`${styles.roleBtn} ${role === 'owner' ? styles.roleBtnActive : ''}`}
               onClick={() => setRole('owner')}
             >
-              🏠 Property Owner
+              <Home size={18} /> Property Owner
             </button>
           </div>
 
           {/* Google Sign In */}
-          <button type="button" className={styles.googleBtn}>
+          <button type="button" className={styles.googleBtn} onClick={handleGoogleSignIn}>
             <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
             Continue with Google
           </button>

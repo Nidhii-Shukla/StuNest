@@ -1,15 +1,16 @@
 .footer {
-  background-color: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-  padding-top: 3rem;
+  background-color: #0A0D10;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 4rem;
   margin-top: auto;
+  color: #fff;
 }
 
 .footerContainer {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
 }
 
 @media (min-width: 768px) {
@@ -29,7 +30,7 @@
   gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: #fff;
   margin-bottom: 1rem;
 }
 
@@ -38,7 +39,7 @@
 }
 
 .tagline {
-  color: var(--color-text-muted);
+  color: #A1A1AA;
   font-size: 0.875rem;
   line-height: 1.5;
 }
@@ -57,14 +58,15 @@
 .linkTitle {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: #fff;
   margin-bottom: 0.5rem;
 }
 
 .link {
-  color: var(--color-text-muted);
+  color: #A1A1AA;
   font-size: 0.875rem;
   transition: color 0.2s;
+  text-decoration: none;
 }
 
 .link:hover {
@@ -72,9 +74,9 @@
 }
 
 .bottomBar {
-  background-color: var(--color-background);
+  background-color: rgba(0,0,0,0.5);
   padding: 1.5rem 0;
   text-align: center;
-  color: var(--color-text-muted);
+  color: #64748B;
   font-size: 0.875rem;
 }

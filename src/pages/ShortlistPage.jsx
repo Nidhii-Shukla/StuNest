@@ -1,11 +1,51 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Trash2, MapPin, Star } from 'lucide-react';
+import { hostelsApi } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import { STATIC_HOSTELS } from '../hooks/useHostels';
 
 export default function ShortlistPage() {
-  const [shortlisted, setShortlisted] = useState(STATIC_HOSTELS.filter(h => h.is_premium).slice(0, 3));
-  const remove = (id) => setShortlisted(s => s.filter(h => h.id !== id));
+  const { user } = useAuth();
+  const [shortlisted, setShortlisted] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      if (user) {
+        try {
+          const data = await hostelsApi.getShortlist(user.id);
+          setShortlisted(data);
+        } catch {
+          // Fallback: show some static hostels for demo
+          setShortlisted(STATIC_HOSTELS.filter(h => h.is_premium).slice(0, 3));
+        }
+      } else {
+        // Guest: show a preview from static data
+        setShortlisted(STATIC_HOSTELS.filter(h => h.is_premium).slice(0, 3));
+      }
+      setLoading(false);
+    }
+    load();
+  }, [user]);
+
+  const remove = async (id) => {
+    setShortlisted(s => s.filter(h => h.id !== id));
+    if (user) {
+      try {
+        await hostelsApi.toggleShortlist(id, user.id);
+      } catch {}
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ paddingTop: '80px', minHeight: '100vh', background: 'var(--color-background)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid var(--color-border)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ paddingTop: '80px', minHeight: '100vh', background: 'var(--color-background)' }}>
@@ -14,6 +54,12 @@ export default function ShortlistPage() {
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>My Shortlist</h1>
           <p style={{ color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>{shortlisted.length} saved hostel{shortlisted.length !== 1 ? 's' : ''}</p>
         </div>
+
+        {!user && (
+          <div style={{ padding: '0.85rem 1.25rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '10px', marginBottom: '1.5rem', fontSize: '0.875rem', color: '#92400E' }}>
+            ℹ️ <Link to="/login" style={{ color: 'var(--color-primary)', fontWeight: 700 }}>Sign in</Link> to save your shortlist permanently across devices.
+          </div>
+        )}
 
         {shortlisted.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--color-text-muted)', background: 'var(--color-surface)', borderRadius: '16px', border: '1px solid var(--color-border)' }}>

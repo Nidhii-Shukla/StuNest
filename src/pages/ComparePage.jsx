@@ -1,30 +1,50 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { GitCompare, X, Star, MapPin, CheckCircle, XCircle } from 'lucide-react';
+import { GitCompare, X, CheckCircle, XCircle } from 'lucide-react';
+import { hostelsApi } from '../lib/api';
 import { STATIC_HOSTELS } from '../hooks/useHostels';
 
 const FAC_ICONS = { ac:'❄️', wifi:'📶', food:'🍽️', laundry:'👕', security:'🔒', gym:'💪', library:'📚', parking:'🚗', pool:'🏊', balcony:'🌿', 'study table':'📖' };
 const ALL_FACILITIES = ['ac','wifi','food','laundry','security','gym','library','parking','pool','balcony','study table'];
 
 export default function ComparePage() {
-  const [selected, setSelected] = useState(STATIC_HOSTELS.slice(0, 2).map(h => h.id));
-  const hostels = useMemo(() => selected.map(id => STATIC_HOSTELS.find(h => h.id === id)).filter(Boolean), [selected]);
+  const [allHostels, setAllHostels] = useState(STATIC_HOSTELS);
+  const [selected, setSelected]     = useState(STATIC_HOSTELS.slice(0, 2).map(h => h.id));
+  const [loadingList, setLoadingList] = useState(true);
 
-  const addHostel = (id) => {
-    if (selected.length >= 3) return;
-    if (!selected.includes(id)) setSelected(s => [...s, id]);
-  };
+  // Load real hostel list from Supabase
+  useEffect(() => {
+    async function load() {
+      setLoadingList(true);
+      try {
+        const data = await hostelsApi.getAll({ limit: 50 });
+        if (data.length > 0) {
+          setAllHostels(data);
+          setSelected(data.slice(0, 2).map(h => h.id));
+        }
+      } catch {}
+      setLoadingList(false);
+    }
+    load();
+  }, []);
+
+  const hostels = useMemo(
+    () => selected.map(id => allHostels.find(h => h.id === id || h.id === String(id))).filter(Boolean),
+    [selected, allHostels]
+  );
+
+  const addHostel    = (id) => { if (selected.length >= 3 || selected.includes(id)) return; setSelected(s => [...s, id]); };
   const removeHostel = (id) => setSelected(s => s.filter(x => x !== id));
 
   const rows = [
     { label: 'Price/Month', render: h => `₹${h.price?.toLocaleString('en-IN')}` },
-    { label: 'Type', render: h => h.type?.toUpperCase() },
-    { label: 'Gender', render: h => h.category === 'both' ? 'Unisex' : h.category },
-    { label: 'Rating', render: h => `${h.rating} ⭐ (${h.review_count || h.reviews || 0})` },
-    { label: 'Distance', render: h => h.distance != null ? `${h.distance} km` : '—' },
-    { label: 'Vacancy', render: h => h.vacancy_count != null ? `${h.vacancy_count} rooms` : '—' },
-    { label: 'Premium', render: h => h.is_premium ? '✅ Yes' : '❌ No' },
-    { label: 'Verified', render: h => h.is_verified ? '✅ Yes' : '❌ No' },
+    { label: 'Type',        render: h => h.type?.toUpperCase() },
+    { label: 'Gender',      render: h => h.category === 'both' ? 'Unisex' : h.category },
+    { label: 'Rating',      render: h => `${h.rating || '–'} ⭐ (${h.review_count || 0})` },
+    { label: 'Distance',    render: h => h.distance != null ? `${h.distance} km` : '—' },
+    { label: 'Vacancy',     render: h => h.vacancy_count != null ? `${h.vacancy_count} rooms` : '—' },
+    { label: 'Premium',     render: h => h.is_premium ? '✅ Yes' : '❌ No' },
+    { label: 'Verified',    render: h => h.is_verified ? '✅ Yes' : '❌ No' },
   ];
 
   return (
@@ -36,18 +56,20 @@ export default function ComparePage() {
         </div>
 
         {/* Selector */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <select
-            onChange={e => addHostel(e.target.value)}
+            onChange={e => { if (e.target.value) addHostel(e.target.value); e.target.value = ''; }}
             style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)', fontSize: '0.875rem', cursor: 'pointer' }}
-            value=""
+            defaultValue=""
           >
-            <option value="">+ Add hostel to compare</option>
-            {STATIC_HOSTELS.filter(h => !selected.includes(h.id)).map(h => (
+            <option value="" disabled>+ Add hostel to compare</option>
+            {allHostels.filter(h => !selected.includes(h.id) && !selected.includes(String(h.id))).map(h => (
               <option key={h.id} value={h.id}>{h.name}</option>
             ))}
           </select>
-          <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', alignSelf: 'center' }}>{selected.length}/3 selected</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+            {loadingList ? 'Loading hostels…' : `${selected.length}/3 selected`}
+          </span>
         </div>
 
         {hostels.length < 2 ? (
@@ -64,9 +86,16 @@ export default function ComparePage() {
                   {hostels.map(h => (
                     <th key={h.id} style={{ padding: '1rem', textAlign: 'center', borderLeft: '1px solid var(--color-border)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                        <img src={h.images?.[0] || h.image} alt={h.name} style={{ width: '100%', maxWidth: '180px', height: '100px', objectFit: 'cover', borderRadius: '10px' }} />
+                        <img
+                          src={h.images?.[0] || h.image || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=400'}
+                          alt={h.name}
+                          style={{ width: '100%', maxWidth: '180px', height: '100px', objectFit: 'cover', borderRadius: '10px' }}
+                        />
                         <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{h.name}</span>
-                        <button onClick={() => removeHostel(h.id)} style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: '6px', padding: '0.2rem 0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                        <button
+                          onClick={() => removeHostel(h.id)}
+                          style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: '6px', padding: '0.2rem 0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}
+                        >
                           <X size={12} /> Remove
                         </button>
                       </div>
@@ -88,7 +117,9 @@ export default function ComparePage() {
                 {/* Facilities */}
                 {ALL_FACILITIES.map(fac => (
                   <tr key={fac} style={{ borderTop: '1px solid var(--color-border)' }}>
-                    <td style={{ padding: '0.65rem 1rem', fontSize: '0.82rem', color: 'var(--color-text-muted)', background: 'var(--color-background)', textTransform: 'capitalize' }}>{FAC_ICONS[fac]} {fac}</td>
+                    <td style={{ padding: '0.65rem 1rem', fontSize: '0.82rem', color: 'var(--color-text-muted)', background: 'var(--color-background)' }}>
+                      {FAC_ICONS[fac]} {fac === 'ac' ? 'AC' : fac === 'wifi' ? 'WiFi' : fac.charAt(0).toUpperCase() + fac.slice(1)}
+                    </td>
                     {hostels.map(h => (
                       <td key={h.id} style={{ padding: '0.65rem 1rem', textAlign: 'center', borderLeft: '1px solid var(--color-border)' }}>
                         {h.facilities?.includes(fac)
@@ -103,7 +134,10 @@ export default function ComparePage() {
                   <td style={{ padding: '1rem', background: 'var(--color-background)' }} />
                   {hostels.map(h => (
                     <td key={h.id} style={{ padding: '1rem', textAlign: 'center', borderLeft: '1px solid var(--color-border)' }}>
-                      <Link to={`/hostel/${h.id}`} style={{ display: 'inline-block', padding: '0.6rem 1.25rem', background: 'var(--color-primary)', color: '#fff', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', textDecoration: 'none' }}>
+                      <Link
+                        to={`/hostel/${h.id}`}
+                        style={{ display: 'inline-block', padding: '0.6rem 1.25rem', background: 'var(--color-primary)', color: '#fff', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', textDecoration: 'none' }}
+                      >
                         View Details
                       </Link>
                     </td>

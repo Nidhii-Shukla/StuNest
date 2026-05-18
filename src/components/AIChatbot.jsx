@@ -39,6 +39,25 @@ function localAnswer(question) {
 }
 
 async function callGroqAPI(messages, systemPrompt) {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  if (backendUrl) {
+    try {
+      const response = await fetch(`${backendUrl.replace(/\/$/, '')}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages, systemPrompt })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data.reply || null;
+      }
+    } catch (e) {
+      console.warn("Railway backend AI proxy failed, falling back to client-direct API", e);
+    }
+  }
+
   const apiKey = import.meta.env.VITE_GROQ_API_KEY;
   if (!apiKey) return null;
   try {

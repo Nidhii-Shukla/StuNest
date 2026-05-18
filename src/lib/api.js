@@ -340,6 +340,15 @@ export const ownerApi = {
       .select();
     if (error) throw error;
     return data;
+  },
+
+  async upsertRoomType(hostelId, name, price, capacity, total, available) {
+    const { data, error } = await supabase
+      .from('room_types')
+      .insert({ hostel_id: hostelId, name, price, capacity, total, available })
+      .select();
+    if (error) throw error;
+    return data;
   }
 };
 
@@ -560,3 +569,93 @@ export const authApi = {
     return data;
   }
 };
+
+// ============================================================
+// ROOMMATE API (Feature #04)
+// ============================================================
+
+export const roommateApi = {
+  // Get all roommate profiles (excluding current user)
+  async getAllActive(currentUserId = null) {
+    let query = supabase
+      .from('roommate_profiles')
+      .select('*, profiles:user_id(full_name, avatar_url, role), hostels(name)')
+      .eq('is_looking', true)
+      .order('created_at', { ascending: false });
+      
+    if (currentUserId) {
+      query = query.neq('user_id', currentUserId);
+    }
+    
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Get a specific user's roommate profile
+  async getProfile(userId) {
+    const { data, error } = await supabase
+      .from('roommate_profiles')
+      .select('*, hostels(name)')
+      .eq('user_id', userId)
+      .maybeSingle();
+      
+    if (error && error.code !== 'PGRST116') throw error; // Ignore not found
+    return data;
+  },
+
+  // Upsert (Create or Update) a roommate profile
+  async upsertProfile(userId, profileData) {
+    const { data, error } = await supabase
+      .from('roommate_profiles')
+      .upsert({ user_id: userId, ...profileData, updated_at: new Date().toISOString() })
+      .select()
+      .single();
+      
+    if (error) throw error;
+    return data;
+  }
+};
+
+// ============================================================
+// ADMIN API
+// ============================================================
+
+export const adminApi = {
+  // Get all pending hostels
+  async getPendingHostels() {
+    const { data, error } = await supabase
+      .from('hostels')
+      .select('*, profiles:owner_id(full_name, email)')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Approve a hostel
+  async approveHostel(hostelId) {
+    const { data, error } = await supabase
+      .from('hostels')
+      .update({ status: 'active', updated_at: new Date().toISOString() })
+      .eq('id', hostelId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  // Reject a hostel
+  async rejectHostel(hostelId) {
+    const { data, error } = await supabase
+      .from('hostels')
+      .update({ status: 'rejected', updated_at: new Date().toISOString() })
+      .eq('id', hostelId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+};
+
+// End of api.js

@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { MapPin, Star, Heart, GitCompare, Navigation, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { buildDirectionsUrl, buildSearchUrl, verifyHostelDistance } from '../lib/maps';
 import styles from './HostelCard.module.css';
 
 const FAC_ICONS = {
-  ac: '❄️', wifi: '📶', food: '🍽️', laundry: '👕', security: '🔒',
-  gym: '💪', library: '📚', parking: '🚗', pool: '🏊', balcony: '🌿',
-  'study table': '📖',
+  ac: 'AC', wifi: 'WiFi', food: 'Dining', laundry: 'Laundry', security: 'Security',
+  gym: 'Gym', library: 'Library', parking: 'Parking', pool: 'Pool', balcony: 'Balcony',
+  'study table': 'Study Desk',
 };
 
 function HostelCard({ hostel, collegeCoords, onShortlist, onCompare, isShortlisted, isCompared }) {
@@ -69,13 +69,13 @@ function HostelCard({ hostel, collegeCoords, onShortlist, onCompare, isShortlist
 
         {/* Category badge */}
         <div className={styles.categoryBadge}>
-          {hostel.category === 'boys' ? '👦 Boys' : hostel.category === 'girls' ? '👧 Girls' : '🤝 Unisex'}&nbsp;{hostel.type?.toUpperCase()}
+          {hostel.category === 'boys' ? 'Boys Only' : hostel.category === 'girls' ? 'Girls Only' : 'Unisex Co-living'}&nbsp;{hostel.type?.toUpperCase()}
         </div>
 
         {/* Vacancy */}
         {vacancyLeft !== null && (
           <div className={`${styles.vacancyBadge} ${isFullyBooked ? styles.vacFull : vacancyLeft <= 2 ? styles.vacLow : styles.vacOk}`}>
-            {isFullyBooked ? '❌ Fully Booked' : vacancyLeft <= 2 ? `⚡ ${vacancyLeft} left!` : `${vacancyLeft} vacant`}
+            {isFullyBooked ? 'Fully Booked' : vacancyLeft <= 2 ? `Only ${vacancyLeft} left` : `${vacancyLeft} Vacant`}
           </div>
         )}
 
@@ -123,7 +123,7 @@ function HostelCard({ hostel, collegeCoords, onShortlist, onCompare, isShortlist
         <div className={styles.facilities}>
           {(hostel.facilities || []).slice(0, 4).map((f, i) => (
             <span key={i} className={styles.facBadge} title={f}>
-              {FAC_ICONS[f] || '✅'} {f}
+              {FAC_ICONS[f] || (f.charAt(0).toUpperCase() + f.slice(1))}
             </span>
           ))}
           {(hostel.facilities?.length || 0) > 4 && (
@@ -157,4 +157,4 @@ function HostelCard({ hostel, collegeCoords, onShortlist, onCompare, isShortlist
   );
 }
 
-export default HostelCard;
+export default memo(HostelCard);
