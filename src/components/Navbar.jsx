@@ -219,6 +219,19 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       <div className={`${styles.mobileMenu} ${menuOpen ? styles.mobileMenuOpen : ''}`}>
+        {user && (
+          <div className={styles.mobileUserHeader}>
+            <div className={styles.avatarMed}>
+              {profile?.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+            </div>
+            <div className={styles.mobileUserInfo}>
+              <p className={styles.mobileUserName}>{profile?.full_name || 'Student'}</p>
+              <p className={styles.mobileUserEmail}>{user.email}</p>
+              <span className={styles.roleBadge}>{profile?.role || 'student'}</span>
+            </div>
+          </div>
+        )}
+
         <Link to="/" className={styles.mobileLink}><Home size={18} /> Home</Link>
         <Link to="/search" className={styles.mobileLink}><Search size={18} /> Find Hostels</Link>
         <Link to="/compare" className={styles.mobileLink}><GitCompare size={18} /> Compare</Link>
@@ -237,6 +250,22 @@ export default function Navbar() {
             <Link to="/signup" className={`${styles.mobileLink} ${styles.mobileSignUp}`}><UserPlus size={18} /> Sign Up Free</Link>
           </>
         )}
+
+        {/* Mobile Language Selector */}
+        <div className={styles.mobileLangSection}>
+          <p className={styles.mobileLangTitle}><Globe size={18} /> Select Language</p>
+          <div className={styles.mobileLangGrid}>
+            {LANGUAGES.map(lang => (
+              <button 
+                key={lang.code} 
+                className={`${styles.mobileLangBtn} ${currentLang.code === lang.code ? styles.mobileLangActive : ''}`} 
+                onClick={() => handleLangChange(lang)}
+              >
+                {lang.name.split(' ')[0]}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Overlay */}
