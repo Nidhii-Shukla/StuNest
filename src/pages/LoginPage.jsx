@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, GraduationCap, Home } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import supabase from '../lib/supabase';
 import StuNestLogo from '../components/StuNestLogo';
 import styles from './AuthPage.module.css';
@@ -52,6 +53,31 @@ function LoginPage() {
       const userRole = profileData?.role || role;
       navigate(userRole === 'owner' ? '/owner' : userRole === 'admin' ? '/admin' : '/search');
     } catch (err) {
+      // Intercept authentication failure to verify if user profile exists
+      try {
+        const { data: profileCheck, error: checkError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', form.email.trim().toLowerCase())
+          .maybeSingle();
+
+        if (!checkError && !profileCheck) {
+          // Account does not exist in profiles table! Redirect to Signup with state.
+          setError('');
+          setLoading(false);
+          toast.error("You've never signed up, Please sign Up first!", {
+            duration: 3000,
+            icon: '👋'
+          });
+          setTimeout(() => {
+            navigate('/signup', { state: { email: form.email, role } });
+          }, 1500);
+          return;
+        }
+      } catch (checkErr) {
+        console.warn("User existence DB check failed:", checkErr);
+      }
+
       setError(err.message || 'Invalid email or password.');
       setLoading(false);
     }
