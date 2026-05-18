@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, Heart, GitCompare, Users, LayoutDashboard, LogOut, LogIn, UserPlus, Menu, X, ChevronDown, Bell, Bookmark, Phone, Map, Globe } from 'lucide-react';
+import { Home, Search, Heart, GitCompare, Users, LayoutDashboard, LogOut, LogIn, UserPlus, Menu, X, ChevronDown, Bell, Bookmark, Phone, Map, Globe, GraduationCap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import StuNestLogo from './StuNestLogo';
@@ -157,18 +157,6 @@ export default function Navbar() {
 
           {user ? (
             <>
-              <Link to="/shortlist" className={styles.profileBtn} style={{ 
-                padding: '0', 
-                borderRadius: '50%', 
-                width: '46px', 
-                height: '46px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                flexShrink: 0
-              }} title="Shortlist">
-                <Heart size={20} />
-              </Link>
               <div className={styles.profileWrap}>
                 <button className={styles.profileBtn} onClick={() => { setProfileOpen(p => !p); setLangOpen(false); }}>
                   <div className={styles.avatarSmall}>
@@ -198,12 +186,11 @@ export default function Navbar() {
                         <LayoutDashboard size={16} /> Admin Dashboard
                       </Link>
                     )}
-                    <Link to="/student" className={styles.dropdownItem}>
-                      <Bookmark size={16} /> My Bookings
-                    </Link>
-                    <Link to="/shortlist" className={styles.dropdownItem}>
-                      <Heart size={16} /> Shortlist
-                    </Link>
+                    {profile?.role !== 'owner' && profile?.role !== 'admin' && (
+                      <Link to="/student" className={styles.dropdownItem}>
+                        <GraduationCap size={16} /> Student Panel
+                      </Link>
+                    )}
                     <div className={styles.dropdownDivider} />
                     <button className={`${styles.dropdownItem} ${styles.signOutItem}`} onClick={handleSignOut}>
                       <LogOut size={16} /> Sign Out
@@ -237,7 +224,7 @@ export default function Navbar() {
         <Link to="/compare" className={styles.mobileLink}><GitCompare size={18} /> Compare</Link>
         {user && (
           <>
-            <Link to="/shortlist" className={styles.mobileLink}><Heart size={18} /> Shortlist</Link>
+            {!ownerOrAdmin && <Link to="/student" className={styles.mobileLink}><GraduationCap size={18} /> Student Panel</Link>}
             {ownerOrAdmin && <Link to="/owner" className={styles.mobileLink}><LayoutDashboard size={18} /> Dashboard</Link>}
             <button className={`${styles.mobileLink} ${styles.mobileSignOut}`} onClick={handleSignOut}>
               <LogOut size={18} /> Sign Out

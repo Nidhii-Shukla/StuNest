@@ -77,6 +77,11 @@
     flex-direction: row;
     overflow-x: auto;
     padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+  }
+  .nav::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Webkit browsers */
   }
 }
 
