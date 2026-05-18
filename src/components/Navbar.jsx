@@ -232,22 +232,22 @@ export default function Navbar() {
           </div>
         )}
 
-        <Link to="/" className={styles.mobileLink}><Home size={18} /> Home</Link>
-        <Link to="/search" className={styles.mobileLink}><Search size={18} /> Find Hostels</Link>
-        <Link to="/compare" className={styles.mobileLink}><GitCompare size={18} /> Compare</Link>
+        <Link to="/" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><Home size={18} /> Home</Link>
+        <Link to="/search" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><Search size={18} /> Find Hostels</Link>
+        <Link to="/compare" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><GitCompare size={18} /> Compare</Link>
         {user && (
           <>
-            {!ownerOrAdmin && <Link to="/student" className={styles.mobileLink}><GraduationCap size={18} /> Student Panel</Link>}
-            {ownerOrAdmin && <Link to="/owner" className={styles.mobileLink}><LayoutDashboard size={18} /> Dashboard</Link>}
-            <button className={`${styles.mobileLink} ${styles.mobileSignOut}`} onClick={handleSignOut}>
+            {!ownerOrAdmin && <Link to="/student" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><GraduationCap size={18} /> Student Panel</Link>}
+            {ownerOrAdmin && <Link to="/owner" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><LayoutDashboard size={18} /> Dashboard</Link>}
+            <button className={`${styles.mobileLink} ${styles.mobileSignOut}`} onClick={() => { handleSignOut(); setMenuOpen(false); }}>
               <LogOut size={18} /> Sign Out
             </button>
           </>
         )}
         {!user && (
           <>
-            <Link to="/login" className={styles.mobileLink}><LogIn size={18} /> Login</Link>
-            <Link to="/signup" className={`${styles.mobileLink} ${styles.mobileSignUp}`}><UserPlus size={18} /> Sign Up Free</Link>
+            <Link to="/login" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><LogIn size={18} /> Login</Link>
+            <Link to="/signup" className={`${styles.mobileLink} ${styles.mobileSignUp}`} onClick={() => setMenuOpen(false)}><UserPlus size={18} /> Sign Up Free</Link>
           </>
         )}
 
