@@ -114,14 +114,18 @@ export default function Navbar() {
             <Home size={16} /> 
             <span className={styles.animText}><span>Home</span><span className={styles.animTextClone} aria-hidden="true">Home</span></span>
           </Link>
-          <Link to="/search" className={`${styles.navLink} ${isActive('/search') ? styles.navLinkActive : ''}`}>
-            <Search size={16} /> 
-            <span className={styles.animText}><span>Listings</span><span className={styles.animTextClone} aria-hidden="true">Listings</span></span>
-          </Link>
-          <Link to="/compare" className={`${styles.navLink} ${isActive('/compare') ? styles.navLinkActive : ''}`}>
-            <GitCompare size={16} /> 
-            <span className={styles.animText}><span>Compare</span><span className={styles.animTextClone} aria-hidden="true">Compare</span></span>
-          </Link>
+          {user && (
+            <>
+              <Link to="/search" className={`${styles.navLink} ${isActive('/search') ? styles.navLinkActive : ''}`}>
+                <Search size={16} /> 
+                <span className={styles.animText}><span>Listings</span><span className={styles.animTextClone} aria-hidden="true">Listings</span></span>
+              </Link>
+              <Link to="/compare" className={`${styles.navLink} ${isActive('/compare') ? styles.navLinkActive : ''}`}>
+                <GitCompare size={16} /> 
+                <span className={styles.animText}><span>Compare</span><span className={styles.animTextClone} aria-hidden="true">Compare</span></span>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Right Actions */}
@@ -233,10 +237,10 @@ export default function Navbar() {
         )}
 
         <Link to="/" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><Home size={18} /> Home</Link>
-        <Link to="/search" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><Search size={18} /> Find Hostels</Link>
-        <Link to="/compare" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><GitCompare size={18} /> Compare</Link>
         {user && (
           <>
+            <Link to="/search" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><Search size={18} /> Find Hostels</Link>
+            <Link to="/compare" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><GitCompare size={18} /> Compare</Link>
             {!ownerOrAdmin && <Link to="/student" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><GraduationCap size={18} /> Student Panel</Link>}
             {ownerOrAdmin && <Link to="/owner" className={styles.mobileLink} onClick={() => setMenuOpen(false)}><LayoutDashboard size={18} /> Dashboard</Link>}
             <button className={`${styles.mobileLink} ${styles.mobileSignOut}`} onClick={() => { handleSignOut(); setMenuOpen(false); }}>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, GraduationCap, Home } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import supabase from '../lib/supabase';
@@ -8,6 +8,7 @@ import styles from './AuthPage.module.css';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('student'); // 'student' | 'owner'
   const [form, setForm] = useState({ email: '', password: '' });
@@ -51,7 +52,8 @@ function LoginPage() {
       setLoading(false);
       
       const userRole = profileData?.role || role;
-      navigate(userRole === 'owner' ? '/owner' : userRole === 'admin' ? '/admin' : '/search');
+      const destination = location.state?.from || (userRole === 'owner' ? '/owner' : userRole === 'admin' ? '/admin' : '/search');
+      navigate(destination);
     } catch (err) {
       // Intercept authentication failure to verify if user profile exists
       try {

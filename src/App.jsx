@@ -52,10 +52,10 @@ function App() {
           {/* Public pages with shared Navbar + Footer */}
           <Route path="/" element={<MainLayout />}>
             <Route index element={<LandingPage />} />
-            <Route path="search"       element={<SearchPage />} />
+            <Route path="search"       element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
             <Route path="map"          element={<ProtectedRoute><StudentDashboard defaultTab="map" /></ProtectedRoute>} />
-            <Route path="hostel/:id"   element={<HostelDetailsPage />} />
-            <Route path="compare"      element={<ComparePage />} />
+            <Route path="hostel/:id"   element={<ProtectedRoute><HostelDetailsPage /></ProtectedRoute>} />
+            <Route path="compare"      element={<ProtectedRoute><ComparePage /></ProtectedRoute>} />
             <Route path="roommate"     element={<ProtectedRoute><StudentDashboard defaultTab="roommates" /></ProtectedRoute>} />
 
             {/* Protected: any logged-in user */}
